@@ -1,92 +1,107 @@
-
 import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
 public class Percolation {
-  private int N;
-  private int TOP_POINT;
-  private int BOTTOM_POINT;
-  private boolean fl[];
-  private int num_open;
-  private WeightedQuickUnionUF a;
+  private int numofCub;
+  private int topPoint;
+  private boolean[] fl;
+  private int numofOpen;
+  private WeightedQuickUnionUF acube;
 
-  private int xyTo1D(int row, int col)
-  {
-	return  (N * (row-1) + col -1);
-  }
-
-  public Percolation(int n)
-  {
-	N = n;
-	TOP_POINT = N*N;
-	BOTTOM_POINT = N*N+1;
-	a = new WeightedQuickUnionUF(N*N+2);
-	fl = new boolean[N*N+2];
-	for(int i = 0; i<N ; i++)
-		fl[i] = false;
-	num_open = 0;
-  }
-
-  public void open(int row, int col)
-  {
-	if(row <= 0 || col <= 0) throw  new java.lang.IllegalArgumentException("row or col index i must in (1- n)");
-	else if( row >  N|| row > N) throw new java.lang.IndexOutOfBoundsException("row or col index i out of bounds");
-	else 
-	{
-		int location = xyTo1D(row,col);
-		if (!isOpen(row,col)) 
-		{
-			fl[location] = true;
-			num_open += 1;
-		}
-		
-		if(row >= 1 && row <N)
-		{
-			if(isOpen(row+1,col))	a.union(location,location+N);
-			if(row == 1)	a.union(location, TOP_POINT);
-		}
-		
-		if(row > 1 && row <= N)
-		{
-			if(isOpen(row-1,col))	a.union(location,location-N);
-			//if(row == N && a.connected(location,TOP_POINT)) 
-			if(row == N ) a.union(location,BOTTOM_POINT);
-		}
-		
-		if(col >= 1 && col < N && isOpen(row,col+1))	a.union(location,location+1);
-
-		if(col > 1 && col <= N && isOpen(row,col-1))	a.union(location,location-1);
-		
-	}
-  }
-
-  public boolean  isOpen(int row, int col)
-  {
-		int location = xyTo1D(row,col);
-		return fl[location];
-  }
-
-  public boolean isFull(int row, int col)
-  {
-	if(row <= 0 || col <= 0) throw  new java.lang.IllegalArgumentException("row or col index i must in (1- n)");
-	else if( row > N || col > N) throw new java.lang.IndexOutOfBoundsException("row or col index i out of bounds");
-	else 
-	{
-		int location = xyTo1D(row,col);
-		if(a.find(location) == a.find(TOP_POINT))	return true;
-		else return false;
-	}
+  private int xyTo1D(int row, int col) {
+    return (numofCub * (row - 1) + col - 1);
   }
   
-  public int numberOfOpenSites()
-  {
-	return num_open;
+  public Percolation(int n) {
+    if (n <= 0) {
+      throw new java.lang.IllegalArgumentException("n > 0");
+    } else {
+      numofCub = n;
+      topPoint = numofCub * numofCub;
+      acube = new WeightedQuickUnionUF(numofCub * numofCub + 1 + numofCub);
+      fl = new boolean[numofCub * numofCub];
+      for (int i = 0; i < numofCub ; i++) {
+        fl[i] = false;
+      }
+      numofOpen = 0;
+    }
   }
 
-  public boolean percolates()
-  {
-	if(a.connected(TOP_POINT,BOTTOM_POINT))	return true;
-	else return false;
+  public void open(int row, int col) {
+    if (row <= 0 || col <= 0 || row > numofCub || col > numofCub) {
+      throw new java.lang.IndexOutOfBoundsException("row or col index i out of bounds");
+    } else {
+      int location = xyTo1D(row,col);  
+      if (!isOpen(row,col)) {
+        fl[location] = true;
+        numofOpen += 1;
+      }
+      
+      if(numofCub == 1) {
+        acube.union(location,topPoint);
+        acube.union(location,location + 1 + numofCub);
+      } else {     
+        if (row == 1) {
+          acube.union(location, topPoint);
+        }
+        if (row < numofCub) {
+          if (isOpen(row + 1,col)) {
+            acube.union(location,location + numofCub);
+          } 
+        }
+        if (row == numofCub) {
+          acube.union(location,location + 1 + numofCub);
+        }
+        if (row > 1 && row <= numofCub) {
+          if (isOpen(row - 1,col)) {
+            acube.union(location,location - numofCub);
+          }
+        }
+  
+        if (col < numofCub && isOpen(row,col + 1)) {
+          acube.union(location,location + 1);
+        }
+  
+        if (col > 1 && col <= numofCub && isOpen(row,col - 1)) {
+          acube.union(location,location - 1);
+        }
+      }
+    }
   }
 
+  public boolean  isOpen(int row, int col) {
+    if (row <= 0 || col <= 0 || row > numofCub || col > numofCub) {
+      throw new java.lang.IndexOutOfBoundsException("row or col index i out of bounds");
+    } else {
+      int location = xyTo1D(row,col);
+      return fl[location];
+    }
+  }
+  
+  public boolean isFull(int row, int col) {
+    if (row <= 0 || col <= 0 || row > numofCub || col > numofCub) {
+      throw new java.lang.IndexOutOfBoundsException("row or col index i out of bounds");
+    } else {
+      int location = xyTo1D(row, col);
+      if (acube.connected(location,topPoint)) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
+  
+  public int numberOfOpenSites() {
+    return numofOpen;
+  }
 
+  public boolean percolates() {
+    for (int i = 1; i <= numofCub; i++)
+    {
+      if (acube.connected(topPoint,topPoint + i))
+      {
+        return true;
+      }
+    }
+    return false;
+  }
 }
